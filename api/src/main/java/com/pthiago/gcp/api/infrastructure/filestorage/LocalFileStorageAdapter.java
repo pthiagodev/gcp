@@ -3,6 +3,7 @@ package com.pthiago.gcp.api.infrastructure.filestorage;
 import com.pthiago.gcp.api.application.port.out.FileStoragePort;
 import com.pthiago.gcp.api.domain.dto.ArquivoInfoDTO;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -13,6 +14,7 @@ import java.time.LocalDate;
 import java.time.format.TextStyle;
 import java.util.Locale;
 
+@Component
 public class LocalFileStorageAdapter implements FileStoragePort {
 
     @Value("${file.upload-dir}")
