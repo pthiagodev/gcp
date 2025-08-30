@@ -5,6 +5,8 @@ import com.pthiago.gcp.api.application.port.out.*;
 import com.pthiago.gcp.api.domain.dto.ArquivoInfoDTO;
 import com.pthiago.gcp.api.domain.model.Fornecedor;
 import com.pthiago.gcp.api.domain.model.NotaFiscal;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,38 +17,44 @@ import java.time.LocalDateTime;
 @Service
 public class NotaFiscalServiceImpl implements NotaFiscalUseCase {
 
+    private static final Logger log = LoggerFactory.getLogger(NotaFiscalServiceImpl.class);
+
     private final FornecedorRepositoryPort fornecedorRepositoryPort;
     private final NotaFiscalRepositoryPort notaFiscalRepositoryPort;
     private final FileStoragePort fileStoragePort;
-    private final EmailSenderPort emailSenderPort;
+    private final NotificacaoServiceImpl notificacaoService;
 
-    public NotaFiscalServiceImpl(FornecedorRepositoryPort fornecedorRepositoryPort, NotaFiscalRepositoryPort notaFiscalRepositoryPort, FileStoragePort fileStoragePort, EmailSenderPort emailSenderPort) {
+    public NotaFiscalServiceImpl(FornecedorRepositoryPort fornecedorRepositoryPort, NotaFiscalRepositoryPort notaFiscalRepositoryPort, FileStoragePort fileStoragePort, NotificacaoServiceImpl notificacaoService) {
         this.fornecedorRepositoryPort = fornecedorRepositoryPort;
         this.notaFiscalRepositoryPort = notaFiscalRepositoryPort;
         this.fileStoragePort = fileStoragePort;
-        this.emailSenderPort = emailSenderPort;
+        this.notificacaoService = notificacaoService;
     }
 
     @Transactional
     @Override
     public void salvarEEnviarNotaFiscal(Long fornecedorId, String numeroNF, ArquivoInfoDTO arquivoInfo) {
-        Fornecedor fornecedor = fornecedorRepositoryPort.buscarPeloId(fornecedorId)
-                .orElseThrow(() -> new RuntimeException("Fornecedor não encontrado!"));
+        log.info("Iniciando caso de uso: Salvar e Enviar Nota Fiscal. Fornecedor ID: {}, NF: '{}'", fornecedorId, numeroNF);
 
-        String novoNomeArquivo = criarNomeArquivo(fornecedor.getNome(), numeroNF);
+        Fornecedor fornecedor = buscarFornecedor(fornecedorId);
 
-        Path caminhoCompleto = fileStoragePort.salvar(novoNomeArquivo, arquivoInfo);
+        String nomeArquivo = criarNomeArquivo(fornecedor.getNome(), numeroNF);
+        Path caminhoArquivo = fileStoragePort.salvar(nomeArquivo, arquivoInfo);
+        log.info("Arquivo da nota fiscal persistido em: {}", caminhoArquivo);
 
-        NotaFiscal notaFiscal = new NotaFiscal();
-        notaFiscal.setNomeArquivo(novoNomeArquivo);
-        notaFiscal.setCaminhoArquivo(caminhoCompleto.toString());
-        notaFiscal.setDataEnvio(LocalDateTime.now());
-        notaFiscal.setFornecedor(fornecedor);
-        notaFiscalRepositoryPort.salvar(notaFiscal);
+        NotaFiscal notaFiscal = registrarMetadadosNotaFiscal(fornecedor, nomeArquivo, caminhoArquivo.toString());
+        log.info("Metadados da nota fiscal registrados no banco. ID da Nota: {}", notaFiscal.getId());
 
-        String assunto = "Nota Fiscal " + numeroNF + " - " + fornecedor.getNome();
-        String corpo = "Olá,\n\nSegue em anexo a nota fiscal " + numeroNF + ".";
-        emailSenderPort.enviarEmailComAnexo(fornecedor.getEmail(), assunto, corpo, caminhoCompleto.toFile());
+        notificacaoService.notificarFornecedorSobreNotaFiscal(fornecedor, numeroNF, caminhoArquivo.toFile());
+        log.info("Notificação enviada para o fornecedor: {}", fornecedor.getEmail());
+    }
+
+    private Fornecedor buscarFornecedor(Long fornecedorId) {
+        return fornecedorRepositoryPort.buscarPeloId(fornecedorId)
+                .orElseThrow(() -> {
+                    log.warn("Tentativa de envio para fornecedor não cadastrado. ID: {}", fornecedorId);
+                    return new RuntimeException("Fornecedor com ID " + fornecedorId + " não encontrado."); // Idealmente uma exceção customizada
+                });
     }
 
     private String criarNomeArquivo(String nomeFornecedor, String numeroNF) {
@@ -54,5 +62,17 @@ public class NotaFiscalServiceImpl implements NotaFiscalUseCase {
                 .replaceAll("\\p{InCombiningDiacriticalMarks}+", "")
                 .replaceAll("[^\\p{Alnum}]+", "_");
         return String.format("%s-%s.pdf", nomeNormalizado, numeroNF);
+    }
+
+    private NotaFiscal registrarMetadadosNotaFiscal(Fornecedor fornecedor, String nomeArquivo, String caminhoArquivo) {
+        NotaFiscal notaFiscal = new NotaFiscal(
+                null,
+                nomeArquivo,
+                caminhoArquivo,
+                LocalDateTime.now(),
+                fornecedor
+        );
+
+        return notaFiscalRepositoryPort.salvar(notaFiscal);
     }
 }
