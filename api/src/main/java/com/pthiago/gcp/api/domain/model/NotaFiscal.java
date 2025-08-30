@@ -1,12 +1,19 @@
 package com.pthiago.gcp.api.domain.model;
 
+import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 
+@Entity
 public class NotaFiscal {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String nomeArquivo;
     private String caminhoArquivo;
     private LocalDateTime dataEnvio;
+    @ManyToOne
+    @JoinColumn(name = "fornecedor_id")
     private Fornecedor fornecedor;
 
     public NotaFiscal() {
