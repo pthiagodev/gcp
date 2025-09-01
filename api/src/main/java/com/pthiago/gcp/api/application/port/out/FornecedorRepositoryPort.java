@@ -6,7 +6,14 @@ import java.util.List;
 import java.util.Optional;
 
 public interface FornecedorRepositoryPort {
-    Optional<Fornecedor> buscarPeloId(Long fornecedorId);
-    List<Fornecedor> listar();
     Fornecedor salvar(Fornecedor fornecedor);
+
+    Optional<Fornecedor> buscarPeloId(Long fornecedorId);
+
+    List<Fornecedor> listar();
+
+    void deletar(Long fornecedorId);
+
+    boolean existePorId(Long fornecedorId);
+
 }
