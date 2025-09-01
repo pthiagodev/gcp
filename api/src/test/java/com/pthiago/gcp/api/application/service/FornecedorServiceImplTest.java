@@ -35,7 +35,7 @@ class FornecedorServiceImplTest {
         @Test
         @DisplayName("✅ Deve criar um novo fornecedor com sucesso")
         void deveCriarFornecedorComSucesso() {
-            var requestDTO = new FornecedorRequestDTO("Fornecedor Teste", "12.345.678/0001-99","85999998888" , "teste@teste.com");
+            var requestDTO = new FornecedorRequestDTO("Fornecedor Teste", "12.345.678/0001-99", "(85) 99999-8888", "teste@teste.com");
             var fornecedorSalvo = new Fornecedor();
             fornecedorSalvo.setId(1L);
             fornecedorSalvo.setNome(requestDTO.nome());
@@ -50,7 +50,7 @@ class FornecedorServiceImplTest {
             assertThat(resultado).isNotNull();
             assertThat(resultado.getId()).isEqualTo(1L);
             assertThat(resultado.getNome()).isEqualTo("Fornecedor Teste");
-            assertThat(resultado.getTelefone()).isEqualTo("85999998888");
+            assertThat(resultado.getTelefone()).isEqualTo("(85) 99999-8888");
             verify(fornecedorRepositoryPort, times(1)).salvar(any(Fornecedor.class));
         }
     }
@@ -110,7 +110,7 @@ class FornecedorServiceImplTest {
         @Test
         @DisplayName("✅ Deve atualizar um fornecedor existente com sucesso")
         void deveAtualizarFornecedorComSucesso() {
-            var requestDTO = new FornecedorRequestDTO("Nome Atualizado", "98.765.432/0001-11","85911112222" , "email@atualizado.com");
+            var requestDTO = new FornecedorRequestDTO("Nome Atualizado", "98.765.432/0001-11", "(85) 91111-2222", "email@atualizado.com");
             var fornecedorExistente = new Fornecedor();
             fornecedorExistente.setId(1L);
 
@@ -122,14 +122,14 @@ class FornecedorServiceImplTest {
             assertThat(resultado).isPresent();
             assertThat(resultado.get().getNome()).isEqualTo("Nome Atualizado");
             assertThat(resultado.get().getEmail()).isEqualTo("email@atualizado.com");
-            assertThat(resultado.get().getTelefone()).isEqualTo("85911112222");
+            assertThat(resultado.get().getTelefone()).isEqualTo("(85) 91111-2222");
             verify(fornecedorRepositoryPort, times(1)).salvar(fornecedorExistente);
         }
 
         @Test
         @DisplayName("🟡 Deve retornar vazio ao tentar atualizar um fornecedor que não existe")
         void deveRetornarVazioAoAtualizarFornecedorInexistente() {
-            var requestDTO = new FornecedorRequestDTO("Nome", "CNPJ","telefone" , "email");
+            var requestDTO = new FornecedorRequestDTO("Nome Valido", "11.111.111/1111-11", "(11) 11111-1111", "email@valido.com");
             when(fornecedorRepositoryPort.buscarPeloId(99L)).thenReturn(Optional.empty());
 
             Optional<Fornecedor> resultado = fornecedorService.atualizarFornecedor(99L, requestDTO);

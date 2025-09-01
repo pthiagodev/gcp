@@ -3,6 +3,7 @@ package com.pthiago.gcp.api.infrastructure.web.rest;
 import com.pthiago.gcp.api.application.port.in.FornecedorUseCase;
 import com.pthiago.gcp.api.domain.dto.FornecedorRequestDTO;
 import com.pthiago.gcp.api.domain.dto.FornecedorResponseDTO;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -22,7 +23,7 @@ public class FornecedorController {
     }
 
     @PostMapping
-    public ResponseEntity<FornecedorResponseDTO> criarFornecedor(@RequestBody FornecedorRequestDTO requestDTO) {
+    public ResponseEntity<FornecedorResponseDTO> criarFornecedor(@RequestBody @Valid FornecedorRequestDTO requestDTO) {
         var fornecedor = fornecedorUseCase.criarFornecedor(requestDTO);
 
         URI location = ServletUriComponentsBuilder
@@ -50,7 +51,7 @@ public class FornecedorController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<FornecedorResponseDTO> atualizarFornecedor(@PathVariable Long id, @RequestBody FornecedorRequestDTO requestDTO) {
+    public ResponseEntity<FornecedorResponseDTO> atualizarFornecedor(@PathVariable Long id, @RequestBody @Valid FornecedorRequestDTO requestDTO) {
         return fornecedorUseCase.atualizarFornecedor(id, requestDTO)
                 .map(fornecedor -> ResponseEntity.ok(FornecedorResponseDTO.fromEntity(fornecedor)))
                 .orElse(ResponseEntity.notFound().build());
