@@ -9,22 +9,16 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 
 @Service
-public class NotificacaoServiceImpl {
+public class NotificacaoService {
 
-    private static final Logger log = LoggerFactory.getLogger(NotificacaoServiceImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(NotificacaoService.class);
 
     private final EmailSenderPort emailSenderPort;
 
-    public NotificacaoServiceImpl(EmailSenderPort emailSenderPort) {
+    public NotificacaoService(EmailSenderPort emailSenderPort) {
         this.emailSenderPort = emailSenderPort;
     }
 
-    /**
-     * Prepara e envia a notificação por e-mail para o fornecedor.
-     * @param fornecedor O objeto do fornecedor que será notificado.
-     * @param numeroNF O número da nota fiscal recebido do frontend.
-     * @param anexo O arquivo PDF da nota fiscal a ser anexado.
-     */
     public void notificarFornecedorSobreNotaFiscal(Fornecedor fornecedor, String numeroNF, File anexo) {
         log.info("Iniciando preparação da notificação para o fornecedor: '{}' (E-mail: {}), NF: {}",
                 fornecedor.getNome(), fornecedor.getEmail(), numeroNF);

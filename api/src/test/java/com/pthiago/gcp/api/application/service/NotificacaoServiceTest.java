@@ -20,13 +20,13 @@ import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("🧪 Testes do Serviço de Notificação")
-class NotificacaoServiceImplTest {
+class NotificacaoServiceTest {
 
     @Mock
     private EmailSenderPort emailSenderPort;
 
     @InjectMocks
-    private NotificacaoServiceImpl notificacaoService;
+    private NotificacaoService notificacaoService;
 
     @Nested
     @DisplayName("Quando notificar um fornecedor sobre uma nota fiscal")

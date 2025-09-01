@@ -30,7 +30,7 @@ class NotaFiscalServiceImplTest {
     @Mock private FornecedorRepositoryPort fornecedorRepositoryPort;
     @Mock private NotaFiscalRepositoryPort notaFiscalRepositoryPort;
     @Mock private FileStoragePort fileStoragePort;
-    @Mock private NotificacaoServiceImpl notificacaoService;
+    @Mock private NotificacaoService notificacaoService;
 
     @InjectMocks
     private NotaFiscalServiceImpl notaFiscalService;

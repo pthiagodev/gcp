@@ -22,9 +22,9 @@ public class NotaFiscalServiceImpl implements NotaFiscalUseCase {
     private final FornecedorRepositoryPort fornecedorRepositoryPort;
     private final NotaFiscalRepositoryPort notaFiscalRepositoryPort;
     private final FileStoragePort fileStoragePort;
-    private final NotificacaoServiceImpl notificacaoService;
+    private final NotificacaoService notificacaoService;
 
-    public NotaFiscalServiceImpl(FornecedorRepositoryPort fornecedorRepositoryPort, NotaFiscalRepositoryPort notaFiscalRepositoryPort, FileStoragePort fileStoragePort, NotificacaoServiceImpl notificacaoService) {
+    public NotaFiscalServiceImpl(FornecedorRepositoryPort fornecedorRepositoryPort, NotaFiscalRepositoryPort notaFiscalRepositoryPort, FileStoragePort fileStoragePort, NotificacaoService notificacaoService) {
         this.fornecedorRepositoryPort = fornecedorRepositoryPort;
         this.notaFiscalRepositoryPort = notaFiscalRepositoryPort;
         this.fileStoragePort = fileStoragePort;
