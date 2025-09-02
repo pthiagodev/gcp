@@ -2,6 +2,8 @@ package com.pthiago.gcp.api.application.service;
 
 import com.pthiago.gcp.api.application.port.out.FornecedorRepositoryPort;
 import com.pthiago.gcp.api.domain.dto.FornecedorRequestDTO;
+import com.pthiago.gcp.api.domain.dto.FornecedorResponseDTO;
+import com.pthiago.gcp.api.domain.exception.ResourceNotFoundException;
 import com.pthiago.gcp.api.domain.model.Fornecedor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -16,11 +18,12 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("🧪 Testes do Serviço de Gerenciamento de Fornecedores")
+@DisplayName("🧪 Testes do Serviço de Fornecedores")
 class FornecedorServiceImplTest {
 
     @Mock
@@ -30,138 +33,123 @@ class FornecedorServiceImplTest {
     private FornecedorServiceImpl fornecedorService;
 
     @Nested
-    @DisplayName("Criação de Fornecedor")
-    class CriacaoFornecedor {
+    @DisplayName("Quando criar um novo fornecedor")
+    class CriarFornecedor {
         @Test
-        @DisplayName("✅ Deve criar um novo fornecedor com sucesso")
+        @DisplayName("✅ Deve criar e retornar o DTO com sucesso")
         void deveCriarFornecedorComSucesso() {
-            var requestDTO = new FornecedorRequestDTO("Fornecedor Teste", "12.345.678/0001-99", "(85) 99999-8888", "teste@teste.com");
-            var fornecedorSalvo = new Fornecedor();
+            FornecedorRequestDTO requestDTO = new FornecedorRequestDTO("Novo Fornecedor", "11.222.333/0001-44", "(85) 99999-1111", "novo@fornecedor.com");
+            Fornecedor fornecedorSalvo = new Fornecedor();
             fornecedorSalvo.setId(1L);
             fornecedorSalvo.setNome(requestDTO.nome());
-            fornecedorSalvo.setCnpj(requestDTO.cnpj());
-            fornecedorSalvo.setEmail(requestDTO.email());
-            fornecedorSalvo.setTelefone(requestDTO.telefone());
 
             when(fornecedorRepositoryPort.salvar(any(Fornecedor.class))).thenReturn(fornecedorSalvo);
 
-            Fornecedor resultado = fornecedorService.criarFornecedor(requestDTO);
+            FornecedorResponseDTO responseDTO = fornecedorService.criarFornecedor(requestDTO);
 
-            assertThat(resultado).isNotNull();
-            assertThat(resultado.getId()).isEqualTo(1L);
-            assertThat(resultado.getNome()).isEqualTo("Fornecedor Teste");
-            assertThat(resultado.getTelefone()).isEqualTo("(85) 99999-8888");
+            assertThat(responseDTO).isNotNull();
+            assertThat(responseDTO.id()).isEqualTo(1L);
             verify(fornecedorRepositoryPort, times(1)).salvar(any(Fornecedor.class));
         }
     }
 
     @Nested
-    @DisplayName("Busca de Fornecedores")
-    class BuscaFornecedores {
+    @DisplayName("Quando buscar um fornecedor por ID")
+    class BuscarPorId {
         @Test
-        @DisplayName("✅ Deve encontrar um fornecedor pelo ID quando ele existe")
-        void deveEncontrarFornecedorPorId() {
-            var fornecedorExistente = new Fornecedor();
+        @DisplayName("✅ Deve retornar o fornecedor quando o ID existe")
+        void deveRetornarFornecedorQuandoIdExiste() {
+            Fornecedor fornecedorExistente = new Fornecedor();
             fornecedorExistente.setId(1L);
             when(fornecedorRepositoryPort.buscarPeloId(1L)).thenReturn(Optional.of(fornecedorExistente));
 
-            Optional<Fornecedor> resultado = fornecedorService.buscarFornecedorPorId(1L);
+            FornecedorResponseDTO responseDTO = fornecedorService.buscarFornecedorPorId(1L);
 
-            assertThat(resultado).isPresent();
-            assertThat(resultado.get().getId()).isEqualTo(1L);
+            assertThat(responseDTO).isNotNull();
+            assertThat(responseDTO.id()).isEqualTo(1L);
         }
 
         @Test
-        @DisplayName("🟡 Deve retornar vazio ao buscar um fornecedor por ID que não existe")
-        void deveRetornarVazioSeFornecedorNaoExiste() {
+        @DisplayName("❌ Deve lançar ResourceNotFoundException quando o ID não existe")
+        void deveLancarExcecaoQuandoIdNaoExiste() {
             when(fornecedorRepositoryPort.buscarPeloId(99L)).thenReturn(Optional.empty());
 
-            Optional<Fornecedor> resultado = fornecedorService.buscarFornecedorPorId(99L);
-
-            assertThat(resultado).isNotPresent();
-        }
-
-        @Test
-        @DisplayName("✅ Deve retornar uma lista de todos os fornecedores")
-        void deveRetornarTodosFornecedores() {
-            var fornecedor1 = new Fornecedor();
-            var fornecedor2 = new Fornecedor();
-            when(fornecedorRepositoryPort.listar()).thenReturn(List.of(fornecedor1, fornecedor2));
-
-            List<Fornecedor> resultado = fornecedorService.buscarTodosFornecedores();
-
-            assertThat(resultado).hasSize(2);
-        }
-
-        @Test
-        @DisplayName("🟡 Deve retornar uma lista vazia se não houver fornecedores")
-        void deveRetornarListaVazia() {
-            when(fornecedorRepositoryPort.listar()).thenReturn(Collections.emptyList());
-
-            List<Fornecedor> resultado = fornecedorService.buscarTodosFornecedores();
-
-            assertThat(resultado).isEmpty();
+            assertThatThrownBy(() -> fornecedorService.buscarFornecedorPorId(99L))
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
     }
 
     @Nested
-    @DisplayName("Atualização de Fornecedor")
-    class AtualizacaoFornecedor {
+    @DisplayName("Quando listar todos os fornecedores")
+    class ListarTodos {
         @Test
-        @DisplayName("✅ Deve atualizar um fornecedor existente com sucesso")
+        @DisplayName("✅ Deve retornar uma lista de fornecedores")
+        void deveRetornarListaDeFornecedores() {
+            when(fornecedorRepositoryPort.listar()).thenReturn(List.of(new Fornecedor(), new Fornecedor()));
+            List<FornecedorResponseDTO> response = fornecedorService.buscarTodosFornecedores();
+            assertThat(response).hasSize(2);
+        }
+
+        @Test
+        @DisplayName("✅ Deve retornar uma lista vazia se não houver fornecedores")
+        void deveRetornarListaVazia() {
+            when(fornecedorRepositoryPort.listar()).thenReturn(Collections.emptyList());
+            List<FornecedorResponseDTO> response = fornecedorService.buscarTodosFornecedores();
+            assertThat(response).isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("Quando atualizar um fornecedor existente")
+    class AtualizarFornecedor {
+        @Test
+        @DisplayName("✅ Deve atualizar o fornecedor com sucesso")
         void deveAtualizarFornecedorComSucesso() {
-            var requestDTO = new FornecedorRequestDTO("Nome Atualizado", "98.765.432/0001-11", "(85) 91111-2222", "email@atualizado.com");
-            var fornecedorExistente = new Fornecedor();
+            FornecedorRequestDTO requestDTO = new FornecedorRequestDTO("Fornecedor Atualizado", "55.666.777/0001-88", "(85) 99999-2222", "atualizado@fornecedor.com");
+            Fornecedor fornecedorExistente = new Fornecedor();
             fornecedorExistente.setId(1L);
 
             when(fornecedorRepositoryPort.buscarPeloId(1L)).thenReturn(Optional.of(fornecedorExistente));
             when(fornecedorRepositoryPort.salvar(any(Fornecedor.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-            Optional<Fornecedor> resultado = fornecedorService.atualizarFornecedor(1L, requestDTO);
+            FornecedorResponseDTO responseDTO = fornecedorService.atualizarFornecedor(1L, requestDTO);
 
-            assertThat(resultado).isPresent();
-            assertThat(resultado.get().getNome()).isEqualTo("Nome Atualizado");
-            assertThat(resultado.get().getEmail()).isEqualTo("email@atualizado.com");
-            assertThat(resultado.get().getTelefone()).isEqualTo("(85) 91111-2222");
-            verify(fornecedorRepositoryPort, times(1)).salvar(fornecedorExistente);
+            assertThat(responseDTO.nome()).isEqualTo("Fornecedor Atualizado");
+            verify(fornecedorRepositoryPort, times(1)).salvar(any(Fornecedor.class));
         }
 
         @Test
-        @DisplayName("🟡 Deve retornar vazio ao tentar atualizar um fornecedor que não existe")
-        void deveRetornarVazioAoAtualizarFornecedorInexistente() {
-            var requestDTO = new FornecedorRequestDTO("Nome Valido", "11.111.111/1111-11", "(11) 11111-1111", "email@valido.com");
+        @DisplayName("❌ Deve lançar ResourceNotFoundException ao tentar atualizar um ID que não existe")
+        void deveLancarExcecaoAoAtualizarIdNaoExistente() {
+            FornecedorRequestDTO requestDTO = new FornecedorRequestDTO("Nome", "11.222.333/0001-44", "(85) 99999-1111", "email@test.com");
             when(fornecedorRepositoryPort.buscarPeloId(99L)).thenReturn(Optional.empty());
 
-            Optional<Fornecedor> resultado = fornecedorService.atualizarFornecedor(99L, requestDTO);
-
-            assertThat(resultado).isNotPresent();
-            verify(fornecedorRepositoryPort, never()).salvar(any());
+            assertThatThrownBy(() -> fornecedorService.atualizarFornecedor(99L, requestDTO))
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
     }
 
     @Nested
-    @DisplayName("Exclusão de Fornecedor")
-    class ExclusaoFornecedor {
+    @DisplayName("Quando deletar um fornecedor")
+    class DeletarFornecedor {
         @Test
-        @DisplayName("✅ Deve retornar true ao deletar um fornecedor que existe")
-        void deveDeletarFornecedorExistente() {
+        @DisplayName("✅ Deve deletar o fornecedor com sucesso")
+        void deveDeletarFornecedorComSucesso() {
             when(fornecedorRepositoryPort.existePorId(1L)).thenReturn(true);
             doNothing().when(fornecedorRepositoryPort).deletar(1L);
 
-            boolean resultado = fornecedorService.deletarFornecedor(1L);
+            fornecedorService.deletarFornecedor(1L);
 
-            assertThat(resultado).isTrue();
             verify(fornecedorRepositoryPort, times(1)).deletar(1L);
         }
 
         @Test
-        @DisplayName("🟡 Deve retornar false ao tentar deletar um fornecedor que não existe")
-        void deveRetornarFalseAoDeletarFornecedorInexistente() {
+        @DisplayName("❌ Deve lançar ResourceNotFoundException ao tentar deletar um ID que não existe")
+        void deveLancarExcecaoAoDeletarIdNaoExistente() {
             when(fornecedorRepositoryPort.existePorId(99L)).thenReturn(false);
 
-            boolean resultado = fornecedorService.deletarFornecedor(99L);
-
-            assertThat(resultado).isFalse();
+            assertThatThrownBy(() -> fornecedorService.deletarFornecedor(99L))
+                    .isInstanceOf(ResourceNotFoundException.class);
             verify(fornecedorRepositoryPort, never()).deletar(anyLong());
         }
     }
