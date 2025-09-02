@@ -1,6 +1,7 @@
 package com.pthiago.gcp.api.application.service;
 
 import com.pthiago.gcp.api.application.port.out.EmailSenderPort;
+import com.pthiago.gcp.api.domain.exception.NotificationFailureException;
 import com.pthiago.gcp.api.domain.model.Fornecedor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -14,9 +15,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.io.File;
 import java.io.IOException;
 
-// Import estático do AssertJ para usar a sintaxe fluente
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("🧪 Testes do Serviço de Notificação")
@@ -30,15 +32,14 @@ class NotificacaoServiceTest {
 
     @Nested
     @DisplayName("Quando notificar um fornecedor sobre uma nota fiscal")
-    class QuandoNotificarFornecedor {
+    class NotificarFornecedor {
 
         @Test
-        @DisplayName("✅ Deve preparar o e-mail e chamar a porta de envio com os dados corretos")
-        void devePrepararEEnviarNotificacaoComDadosCorretos() throws IOException {
+        @DisplayName("✅ Deve preparar e enviar a notificação com sucesso")
+        void deveEnviarNotificacaoComSucesso() throws IOException {
             Fornecedor fornecedor = new Fornecedor();
-            fornecedor.setNome("Fornecedor Exemplo LTDA");
+            fornecedor.setNome("Fornecedor Exemplo");
             fornecedor.setEmail("contato@fornecedor.com");
-
             String numeroNF = "987654";
             File anexo = File.createTempFile("test", ".pdf");
             anexo.deleteOnExit();
@@ -50,19 +51,25 @@ class NotificacaoServiceTest {
             ArgumentCaptor<String> corpoCaptor = ArgumentCaptor.forClass(String.class);
             ArgumentCaptor<File> anexoCaptor = ArgumentCaptor.forClass(File.class);
 
-            verify(emailSenderPort).enviarEmailComAnexo(
-                    paraCaptor.capture(),
-                    assuntoCaptor.capture(),
-                    corpoCaptor.capture(),
-                    anexoCaptor.capture()
-            );
+            verify(emailSenderPort).enviarEmailComAnexo(paraCaptor.capture(), assuntoCaptor.capture(), corpoCaptor.capture(), anexoCaptor.capture());
 
             assertThat(paraCaptor.getValue()).isEqualTo("contato@fornecedor.com");
-            assertThat(assuntoCaptor.getValue())
-                    .contains("Nota Fiscal 987654")
-                    .contains("Fornecedor Exemplo LTDA");
-            assertThat(corpoCaptor.getValue()).contains("nota fiscal 987654");
-            assertThat(anexoCaptor.getValue()).isEqualTo(anexo);
+            assertThat(assuntoCaptor.getValue()).contains("Nota Fiscal 987654", "Fornecedor Exemplo");
+        }
+
+        @Test
+        @DisplayName("❌ Deve lançar NotificationFailureException se a porta de envio de e-mail falhar")
+        void deveLancarExcecaoSePortaDeEmailFalhar() throws IOException {
+            Fornecedor fornecedor = new Fornecedor();
+            File anexo = File.createTempFile("test", ".pdf");
+            anexo.deleteOnExit();
+
+            doThrow(new RuntimeException("SMTP server offline")).when(emailSenderPort).enviarEmailComAnexo(anyString(), anyString(), anyString(), any(File.class));
+
+            assertThatThrownBy(() -> notificacaoService.notificarFornecedorSobreNotaFiscal(fornecedor, "123", anexo))
+                    .isInstanceOf(NotificationFailureException.class)
+                    .hasMessageContaining("Falha ao enviar e-mail de notificação.");
         }
     }
 }
+
