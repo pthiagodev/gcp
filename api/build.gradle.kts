@@ -26,6 +26,7 @@ dependencies {
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     runtimeOnly("org.postgresql:postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.assertj:assertj-core:3.25.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
