@@ -10,7 +10,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/fornecedores")
@@ -24,44 +23,35 @@ public class FornecedorController {
 
     @PostMapping
     public ResponseEntity<FornecedorResponseDTO> criarFornecedor(@RequestBody @Valid FornecedorRequestDTO requestDTO) {
-        var fornecedor = fornecedorUseCase.criarFornecedor(requestDTO);
+        var responseDTO = fornecedorUseCase.criarFornecedor(requestDTO);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path("/{id}")
-                .buildAndExpand(fornecedor.getId())
+                .buildAndExpand(responseDTO.id())
                 .toUri();
 
-        return ResponseEntity.created(location).body(FornecedorResponseDTO.fromEntity(fornecedor));
+        return ResponseEntity.created(location).body(responseDTO);
     }
 
     @GetMapping
     public ResponseEntity<List<FornecedorResponseDTO>> buscarTodosFornecedores() {
-        List<FornecedorResponseDTO> fornecedores = fornecedorUseCase.buscarTodosFornecedores().stream()
-                .map(FornecedorResponseDTO::fromEntity)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(fornecedores);
+        return ResponseEntity.ok(fornecedorUseCase.buscarTodosFornecedores());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<FornecedorResponseDTO> buscarFornecedorPorId(@PathVariable Long id) {
-        return fornecedorUseCase.buscarFornecedorPorId(id)
-                .map(fornecedor -> ResponseEntity.ok(FornecedorResponseDTO.fromEntity(fornecedor)))
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(fornecedorUseCase.buscarFornecedorPorId(id));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<FornecedorResponseDTO> atualizarFornecedor(@PathVariable Long id, @RequestBody @Valid FornecedorRequestDTO requestDTO) {
-        return fornecedorUseCase.atualizarFornecedor(id, requestDTO)
-                .map(fornecedor -> ResponseEntity.ok(FornecedorResponseDTO.fromEntity(fornecedor)))
-                .orElse(ResponseEntity.notFound().build());
+        return ResponseEntity.ok(fornecedorUseCase.atualizarFornecedor(id, requestDTO));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarFornecedor(@PathVariable Long id) {
-        if (fornecedorUseCase.deletarFornecedor(id)) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
+        fornecedorUseCase.deletarFornecedor(id);
+        return ResponseEntity.noContent().build();
     }
 }
