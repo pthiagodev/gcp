@@ -3,6 +3,7 @@ package com.pthiago.gcp.api.application.service;
 import com.pthiago.gcp.api.application.port.in.NotaFiscalUseCase;
 import com.pthiago.gcp.api.application.port.out.*;
 import com.pthiago.gcp.api.domain.dto.ArquivoInfoDTO;
+import com.pthiago.gcp.api.domain.exception.ResourceNotFoundException;
 import com.pthiago.gcp.api.domain.model.Fornecedor;
 import com.pthiago.gcp.api.domain.model.NotaFiscal;
 import org.slf4j.Logger;
@@ -53,7 +54,7 @@ public class NotaFiscalServiceImpl implements NotaFiscalUseCase {
         return fornecedorRepositoryPort.buscarPeloId(fornecedorId)
                 .orElseThrow(() -> {
                     log.warn("Tentativa de envio para fornecedor não cadastrado. ID: {}", fornecedorId);
-                    return new RuntimeException("Fornecedor com ID " + fornecedorId + " não encontrado."); // Idealmente uma exceção customizada
+                    return new ResourceNotFoundException("Fornecedor com ID " + fornecedorId + " não encontrado.");
                 });
     }
 

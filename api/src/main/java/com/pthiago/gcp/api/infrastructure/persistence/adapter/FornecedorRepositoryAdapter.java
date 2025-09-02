@@ -18,6 +18,11 @@ public class FornecedorRepositoryAdapter implements FornecedorRepositoryPort {
     }
 
     @Override
+    public Fornecedor salvar(Fornecedor fornecedor) {
+        return jpaRepository.save(fornecedor);
+    }
+
+    @Override
     public Optional<Fornecedor> buscarPeloId(Long fornecedorId) {
         return jpaRepository.findById(fornecedorId);
     }
@@ -28,7 +33,12 @@ public class FornecedorRepositoryAdapter implements FornecedorRepositoryPort {
     }
 
     @Override
-    public Fornecedor salvar(Fornecedor fornecedor) {
-        return jpaRepository.save(fornecedor);
+    public void deletar(Long fornecedorId) {
+        jpaRepository.deleteById(fornecedorId);
+    }
+
+    @Override
+    public boolean existePorId(Long fornecedorId) {
+        return jpaRepository.existsById(fornecedorId);
     }
 }
