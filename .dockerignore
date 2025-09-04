@@ -1,0 +1,18 @@
+# Arquivos de controle de versão
+.git
+.gitignore
+
+# Arquivos e pastas da IDE
+.idea/
+.vscode/
+*.iml
+
+# Arquivos de ambiente locais que não devem entrar na imagem
+.env
+
+# Pastas de build geradas localmente
+/api/build
+/api/target
+
+# Logs e arquivos temporários
+*.log
