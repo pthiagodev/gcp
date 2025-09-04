@@ -33,11 +33,27 @@ dependencies {
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.testcontainers:postgresql")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        exclude(group = "org.mockito") // evitar conflito
+    }
     testImplementation("org.assertj:assertj-core:3.25.3")
+    testImplementation("org.mockito:mockito-core:5.19.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.19.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 tasks.withType<Test> {
     useJUnitPlatform()
+
+    if (project.hasProperty("TEST_CNPJ")) {
+        systemProperty("TEST_CNPJ", project.property("TEST_CNPJ") as String)
+    }
+
+    doFirst {
+        val mockitoCore = configurations.testRuntimeClasspath.get()
+            .first { it.name.startsWith("mockito-core") }
+        jvmArgs("-javaagent:${mockitoCore.absolutePath}",
+            "-Xshare:off"
+        )
+    }
 }
