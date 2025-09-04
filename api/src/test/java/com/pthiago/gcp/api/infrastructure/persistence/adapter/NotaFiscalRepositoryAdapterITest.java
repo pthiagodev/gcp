@@ -3,10 +3,12 @@ package com.pthiago.gcp.api.infrastructure.persistence.adapter;
 import com.pthiago.gcp.api.AbstractIntegrationTest;
 import com.pthiago.gcp.api.domain.model.Fornecedor;
 import com.pthiago.gcp.api.domain.model.NotaFiscal;
+import com.pthiago.gcp.api.factory.FornecedorFactory;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -26,13 +28,13 @@ class NotaFiscalRepositoryAdapterITest extends AbstractIntegrationTest {
     @Autowired
     private EntityManager entityManager;
 
+    @Value("${TEST_CNPJ}")
+    private String cnpjValido;
+
     @Test
     @DisplayName("✅ Deve salvar uma nota fiscal com sucesso")
     void deveSalvarNotaFiscalComSucesso() {
-        Fornecedor fornecedor = new Fornecedor();
-        fornecedor.setNome("Fornecedor para NF");
-        fornecedor.setCnpj("99.999.999/0001-99");
-        fornecedor.setEmail("nf@teste.com");
+        Fornecedor fornecedor = FornecedorFactory.criarFornecedor(cnpjValido);
         Fornecedor fornecedorSalvo = fornecedorRepositoryAdapter.salvar(fornecedor);
         entityManager.flush();
 
